@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!--<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -109,6 +109,72 @@ function submitAnswers() {
     document.getElementById("score").innerText = score;
     document.getElementById("feedback").innerText = feedback;
     document.getElementById("resultBox").style.display = "block";
+}
+</script>
+
+</body>
+</html>
+
+
+
+async function submitAnswer() {
+    const modelAnswer = document.getElementById("model").value;
+    const studentAnswer = document.getElementById("student").value;
+
+    const response = await fetch("/grade", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            model_answer: modelAnswer,
+            student_answer: studentAnswer
+        })
+    });
+
+    const result = await response.json();
+    document.getElementById("result").innerText =
+        "Score: " + result.score + " | " + result.feedback;
+}-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Assisted Grading</title>
+</head>
+<body>
+
+<h2>AI Assisted Assignment Grading</h2>
+
+<label>Student Roll Number</label><br>
+<input id="roll" type="text"><br><br>
+
+<label>Question</label>
+<p><b>{{ question }}</b></p>
+
+<label>Your Answer</label><br>
+<textarea id="answer" rows="6" cols="60"></textarea><br><br>
+
+<button onclick="submitAnswer()">Submit</button>
+
+<h3 id="result"></h3>
+
+<script>
+function submitAnswer() {
+    fetch("/grade", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            roll_no: document.getElementById("roll").value,
+            student_answer: document.getElementById("answer").value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerHTML =
+            "Score: " + data.score + "<br>" +
+            "Feedback: " + data.feedback;
+    });
 }
 </script>
 
