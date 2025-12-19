@@ -12,45 +12,65 @@
 
 <label>Select Question</label><br>
 <select id="qid" onchange="updateQuestion()">
+    <option value="">-- Select Question --</option>
     {% for qid in questions %}
-    <option value="{{ qid }}">{{ qid }}</option>
+        <option value="{{ qid }}">{{ qid }}</option>
     {% endfor %}
 </select><br><br>
 
-<p id="questionText">
-    {% if questions %}
-        {{ questions | list | first }}
-    {% endif %}
-</p>
+<p><b>Question:</b></p>
+<p id="questionText">Please select a question</p>
 
-<textarea id="answer" placeholder="Your answer"></textarea><br><br>
+<textarea id="answer" rows="4" cols="60" placeholder="Your answer"></textarea><br><br>
 
 <button onclick="submitAnswer()">Submit</button>
 
+<hr>
 <p id="result"></p>
 
 <script>
+const questions = {{ questions | tojson | safe }};
+
 function updateQuestion() {
-    var questions = {{ questions | tojson | safe }};
-    var qid = document.getElementById("qid").value;
-    document.getElementById("questionText").innerText = questions[qid].question;
+    const qid = document.getElementById("qid").value;
+
+    if (qid && questions[qid]) {
+        document.getElementById("questionText").innerText =
+            questions[qid].question;
+    } else {
+        document.getElementById("questionText").innerText =
+            "Please select a question";
+    }
 }
 
 function submitAnswer() {
+    const roll = document.getElementById("roll").value.trim();
+    const qid = document.getElementById("qid").value;
+    const answer = document.getElementById("answer").value.trim();
+
+    if (!qid || !answer) {
+        alert("Please select a question and write an answer");
+        return;
+    }
+
     fetch("/grade", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            roll_no: document.getElementById("roll").value,
-            question_id: document.getElementById("qid").value,
-            student_answer: document.getElementById("answer").value
+            roll_no: roll,
+            question_id: qid,
+            student_answer: answer
         })
     })
     .then(res => res.json())
     .then(data => {
         document.getElementById("result").innerHTML =
-            "Score: " + data.score + "<br>" +
-            "Feedback: " + data.feedback;
+            "<b>Score:</b> " + data.score + "<br>" +
+            "<b>Feedback:</b> " + data.feedback;
+    })
+    .catch(() => {
+        document.getElementById("result").innerText =
+            "Error submitting answer";
     });
 }
 </script>

@@ -140,43 +140,22 @@ async function submitAnswer() {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Assisted Grading</title>
+    <title>AI Assisted Grading System</title>
 </head>
 <body>
 
-<h2>AI Assisted Assignment Grading</h2>
+<h1>AI Assisted Grading System</h1>
 
-<label>Student Roll Number</label><br>
-<input id="roll" type="text"><br><br>
+<p>Select your role:</p>
 
-<label>Question</label>
-<p><b>{{ question }}</b></p>
+<a href="/staff">
+    <button>Staff Page</button>
+</a>
 
-<label>Your Answer</label><br>
-<textarea id="answer" rows="6" cols="60"></textarea><br><br>
-
-<button onclick="submitAnswer()">Submit</button>
-
-<h3 id="result"></h3>
-
-<script>
-function submitAnswer() {
-    fetch("/grade", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            roll_no: document.getElementById("roll").value,
-            student_answer: document.getElementById("answer").value
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("result").innerHTML =
-            "Score: " + data.score + "<br>" +
-            "Feedback: " + data.feedback;
-    });
-}
-</script>
+<a href="/student">
+    <button>Student Page</button>
+</a>
 
 </body>
 </html>
+

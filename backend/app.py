@@ -26,11 +26,10 @@ def grade():
 if __name__ == "__main__":
     print("Starting Flask server...")
     app.run(debug=True)'''
-
 import sys
 import os
 
-# ✅ FORCE Python to see project root
+# ---------------- PATH FIX ---------------- #
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -38,36 +37,92 @@ from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from ai_logic.similarity import grade_answer
 
-app = Flask(__name__, template_folder="../templates")
+# ---------------- APP SETUP ---------------- #
+app = Flask(
+    __name__,
+    template_folder=os.path.join(PROJECT_ROOT, "templates")
+)
 CORS(app)
 
-QUESTION = "Explain the process of photosynthesis."
-MODEL_ANSWER = (
-    "Photosynthesis is the process by which green plants use sunlight "
-    "to synthesize food from carbon dioxide and water using chlorophyll."
-)
-MAX_MARKS = 10
+# ---------------- IN-MEMORY STORE ---------------- #
+# questions = {
+#   "1": {
+#       "question": "...",
+#       "model_answer": "...",
+#       "marks": 10
+#   }
+# }
+questions = {}
+
+# ---------------- PAGE ROUTES ---------------- #
 
 @app.route("/")
-def home():
-    return render_template("index.html", question=QUESTION)
+def index():
+    return render_template("index.html")
+
+@app.route("/staff")
+def staff():
+    return render_template("staff.html")
+
+@app.route("/student")
+def student():
+    # IMPORTANT: pass questions to student page
+    return render_template("student.html", questions=questions)
+
+# ---------------- API ROUTES ---------------- #
+
+@app.route("/add_question", methods=["POST"])
+def add_question():
+    data = request.get_json()
+
+    qid = str(data["question_id"])
+
+    questions[qid] = {
+        "question": data["question"],
+        "model_answer": data["model_answer"],
+        "marks": int(data["marks"])
+    }
+
+    print("Question Added:", questions[qid])  # visible in terminal
+
+    return jsonify({"status": "success"})
 
 @app.route("/grade", methods=["POST"])
 def grade():
-    data = request.json
+    try:
+        data = request.get_json()
 
-    result = grade_answer(
-        QUESTION,
-        MODEL_ANSWER,
-        data["student_answer"],
-        MAX_MARKS
-    )
+        qid = str(data["question_id"])
+        student_answer = data["student_answer"].strip()
 
-    return jsonify({
-        "roll_no": data["roll_no"],
-        "score": result["score"],
-        "feedback": result["feedback"]
-    })
+        if qid not in questions:
+            return jsonify({
+                "score": 0,
+                "feedback": "Invalid question selected"
+            })
+
+        q = questions[qid]
+
+        result = grade_answer(
+            q["question"],
+            q["model_answer"],
+            student_answer,
+            q["marks"]
+        )
+
+        return jsonify({
+            "score": result["score"],
+            "feedback": result["feedback"]
+        })
+
+    except Exception as e:
+        print("ERROR IN /grade:", e)
+        return jsonify({
+            "score": 0,
+            "feedback": "Error while grading"
+        }), 500
+
+# ---------------- RUN SERVER ---------------- #
 
 if __name__ == "__main__":
     print("AI Grading Server Running...")

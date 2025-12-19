@@ -1,23 +1,53 @@
-<h2>Staff – Add Question</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff</title>
+</head>
+<body>
 
-<input id="qid" placeholder="Question ID"><br><br>
-<textarea id="question" placeholder="Question"></textarea><br><br>
-<textarea id="model" placeholder="Model Answer"></textarea><br><br>
+<h2>Staff : Add Question</h2>
+
+<label>Question ID</label><br>
+<input id="qid" placeholder="e.g. 1"><br><br>
+
+<label>Question</label><br>
+<textarea id="question" rows="3" cols="60"></textarea><br><br>
+
+<label>Model Answer</label><br>
+<textarea id="model" rows="3" cols="60"></textarea><br><br>
+
+<label>Marks</label><br>
 <input id="marks" type="number" value="10"><br><br>
 
 <button onclick="addQuestion()">Add Question</button>
 
 <script>
 function addQuestion() {
+    const qid = document.getElementById("qid").value.trim();
+    const question = document.getElementById("question").value.trim();
+    const model = document.getElementById("model").value.trim();
+    const marks = document.getElementById("marks").value;
+
+    if (!qid || !question || !model || !marks) {
+        alert("Please fill all fields");
+        return;
+    }
+
     fetch("/add_question", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
-            question_id: qid.value,
-            question: question.value,
-            model_answer: model.value,
-            marks: parseInt(marks.value)
+            question_id: qid,
+            question: question,
+            model_answer: model,
+            marks: parseInt(marks)
         })
-    }).then(() => alert("Question added"));
+    })
+    .then(res => res.json())
+    .then(() => alert("Question Added Successfully"));
 }
 </script>
+
+</body>
+</html>
+

@@ -18,42 +18,43 @@ def grade_answer(model_answer, student_answer):
         "score": marks,
         "feedback": "Marks calculated using TF-IDF similarity"
     }'''
-
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def grade_answer(question, model_answer, student_answer, max_marks=10):
-    if not student_answer.strip():
+
+def grade_answer(question, model_answer, student_answer, max_marks):
+    # Convert to lowercase and strip spaces
+    model_answer = model_answer.lower().strip()
+    student_answer = student_answer.lower().strip()
+
+    # If student didn't answer
+    if not student_answer:
         return {
             "score": 0,
             "feedback": "No answer submitted."
         }
 
-    # TF-IDF similarity
-    vectorizer = TfidfVectorizer(
-        stop_words="english",
-        ngram_range=(1, 2)
-    )
-    vectors = vectorizer.fit_transform([
-        model_answer,
-        student_answer
-    ])
+    # TF-IDF Vectorization
+    vectorizer = TfidfVectorizer(stop_words="english")
+    vectors = vectorizer.fit_transform([model_answer, student_answer])
 
+    # Cosine similarity
     similarity = cosine_similarity(vectors[0], vectors[1])[0][0]
-    score = round(similarity * max_marks, 1)
 
-    # AI-style feedback
-    if score >= 0.85 * max_marks:
-        feedback = "Excellent answer. Key concepts are clearly explained."
-    elif score >= 0.6 * max_marks:
-        feedback = "Good answer, but some important points are missing."
-    elif score >= 0.3 * max_marks:
-        feedback = "Partial understanding shown. Needs improvement."
+    # Convert similarity to marks
+    score = round(similarity * max_marks)
+
+    # Simple feedback
+    if similarity < 0.2:
+        feedback = "Answer is not relevant."
+    elif similarity < 0.5:
+        feedback = "Partially correct answer."
+    elif similarity < 0.8:
+        feedback = "Good answer."
     else:
-        feedback = "Answer does not address the main concepts."
+        feedback = "Excellent answer."
 
     return {
         "score": score,
         "feedback": feedback
     }
-
